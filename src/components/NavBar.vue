@@ -63,7 +63,7 @@ export default {
 				{
 					label:'Salir',
 					class: 'capitalize',
-					command: () => this.toUrl('admin.login')
+					command: () => this.logout()
 				}
 			],
 		}
@@ -78,6 +78,11 @@ export default {
 		toUrl(url){
             this.$router.push({ name: url })
         },
+		logout(){
+			localStorage.removeItem('token');
+
+			window.location.href = '/admin/login';
+		}
     },
 }
 </script>

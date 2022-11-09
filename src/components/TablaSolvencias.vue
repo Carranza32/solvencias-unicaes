@@ -9,7 +9,7 @@
 			</template>
 		</Toolbar>
 
-        <DataTable ref="dt" :value="customers" :paginator="true" class="p-datatable-customers" :rows="10"
+        <DataTable ref="dt" :value="solvencies" :paginator="true" class="p-datatable-customers" :rows="10"
             dataKey="id" :rowHover="true" v-model:selection="selectedCustomers" v-model:filters="filters" filterDisplay="menu" :loading="loading"
             paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown" :rowsPerPageOptions="[10,25,50]"
             currentPageReportTemplate="Showing {first} to {last} of {totalRecords} entries"
@@ -33,43 +33,36 @@
             </template>
 
             <Column selectionMode="multiple" headerStyle="width: 3rem"></Column>
-            <Column field="name" header="Nombre" sortable style="min-width: 14rem">
+            <Column field="Borrower" header="Nombre" sortable style="min-width: 14rem">
                 <template #body="{data}">
-                    {{data.name}}
+                    {{data.Borrower.first_name}} {{data.Borrower.last_name}}
                 </template>
                 <template #filter="{filterModel}">
                     <InputText type="text" v-model="filterModel.value" class="p-column-filter" placeholder="Search by name"/>
                 </template>
             </Column>
-			<Column field="name" header="Carnet" sortable style="min-width: 14rem" class="uppercase">
+			<Column field="Borrower" header="Carnet" sortable style="min-width: 14rem" class="uppercase">
                 <template #body="{data}">
-                    2019{{getRandomLetter(data.name)}}-{{ getRandomArbitrary(600, 620) }}
+                    {{data.Borrower.carnet_code}}
                 </template>
                 <template #filter="{filterModel}">
                     <InputText type="text" v-model="filterModel.value" class="p-column-filter" placeholder="Search by name"/>
                 </template>
             </Column>
-            <Column field="date" header="Fecha" sortable dataType="date" style="min-width: 8rem">
+            <Column field="requested_at" header="Fecha" sortable dataType="date" style="min-width: 8rem">
                 <template #body="{data}">
-                    {{formatDate(data.date)}}
+                    {{formatDate(data.requested_at)}}
                 </template>
                 <template #filter="{filterModel}">
                     <Calendar v-model="filterModel.value" dateFormat="mm/dd/yy" placeholder="mm/dd/yyyy" />
                 </template>
             </Column>
-            <Column field="status" header="Estado" sortable :filterMenuStyle="{'width':'14rem'}" style="min-width: 10rem">
+            <Column field="reason" header="Razon" sortable style="min-width: 14rem">
                 <template #body="{data}">
-                    <span :class="'customer-badge status-' + data.status">{{data.status}}</span>
+                    {{data.reason}}
                 </template>
                 <template #filter="{filterModel}">
-                    <Dropdown v-model="filterModel.value" :options="statuses" placeholder="Any" class="p-column-filter" :showClear="true">
-                        <template #value="slotProps">
-                            <span :class="'customer-badge status-' + slotProps.value">{{slotProps.value}}</span>
-                        </template>
-                        <template #option="slotProps">
-                            <span :class="'customer-badge status-' + slotProps.option">{{slotProps.option}}</span>
-                        </template>
-                    </Dropdown>
+                    <InputText type="text" v-model="filterModel.value" class="p-column-filter" placeholder="Search by name"/>
                 </template>
             </Column>
             <Column headerStyle="width: 4rem; text-align: center" bodyStyle="text-align: center; overflow: visible">
@@ -88,6 +81,7 @@ import {FilterMatchMode,FilterOperator} from 'primevue/api';
 export default {
     data() {
         return {
+			solvencies: [],
             customers: null,
             selectedCustomers: null,
 			apiService: null,
@@ -123,12 +117,14 @@ export default {
     created() {
         this.apiService = new ApiService();
     },
-    mounted() {
-        this.apiService.getCustomers().then(data => {
-            this.customers = data?.customers;
-            this.customers.forEach(customer => customer.date = new Date(customer.date));
-            this.loading = false;
-        });
+    async mounted() {		
+        const response = await this.apiService.getWithToken('solvencies')
+
+		this.solvencies = response
+		console.log(this.solvencies);
+
+		this.solvencies.forEach(el => el.requested_at = new Date(el.requested_at));
+		this.loading = false;
     },
     methods: {
         formatDate(value) {

@@ -6,7 +6,8 @@
 export default {
 	async beforeMount() {
 		if (localStorage.getItem('token') == null || localStorage.getItem('token') == 'undefined') {
-			if (window.location.pathname != '/admin/login' || window.location.pathname != '/' || window.location.pathname != '') {
+			console.log(window.location.pathname);
+			if (window.location.pathname != '/admin/login' && window.location.pathname != '/' && window.location.pathname != '') {
 				window.location.replace('/admin/login')
 				return
 			}
