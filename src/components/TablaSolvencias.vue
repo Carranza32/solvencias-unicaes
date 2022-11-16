@@ -65,12 +65,65 @@
                     <InputText type="text" v-model="filterModel.value" class="p-column-filter" placeholder="Search by name"/>
                 </template>
             </Column>
-            <Column headerStyle="width: 4rem; text-align: center" bodyStyle="text-align: center; overflow: visible">
-                <template #body>
-                    <Button type="button" label="Imprimir" class="p-button-outlined" icon="pi pi-print"></Button>
+            <Column field="requested_by" headerStyle="width: 4rem; text-align: center" bodyStyle="text-align: center; overflow: visible">
+                <template #body="{data}">
+                    <div class="flex">
+						<Button icon="pi pi-eye" @click="showDetails(data?.requested_by)" class="p-button-text p-button-secondary mr-3" />
+                    	<Button type="button" label="Imprimir" class="p-button-outlined" @click="downloadPDF(data.id)" icon="pi pi-print"></Button>
+					</div>
                 </template>
             </Column>
         </DataTable>
+
+		<Dialog header="Detalle" v-model:visible="$store.state.borrowerDetailsModalStatus" :breakpoints="{'960px': '75vw', '640px': '90vw'}" :style="{width: '50vw'}" :maximizable="true" :modal="true">
+			<div class="flex flex-column field mt-2">
+				<p><strong>Nombre Completo:</strong> {{ selected_borrower?.first_name }} {{ selected_borrower?.last_name }}</p>
+				<p><strong>Carnet:</strong> {{ selected_borrower?.carnet_code }}</p>
+				<p><strong>Correo:</strong> {{ selected_borrower?.email }}</p>
+				<p><strong>Carrera:</strong> {{ selected_borrower?.career }}</p>
+				<p><strong>Facultad:</strong> {{ selected_borrower?.faculty }}</p>
+				<p><strong>Region:</strong> {{ selected_borrower?.region_id }}</p>
+			</div>
+
+			<h4>Prestamos</h4>
+			<DataTable :value="selected_borrower?.Borrowed_Book" responsiveLayout="scroll" class="p-datatable-sm mb-3" v-if="selected_borrower?.Borrowed_Book.length">
+                <Column field="book_id" header="Libro"></Column>
+                <Column field="sanctioned_at" header="Fecha prestamo">
+					<template #body="{data}">
+						{{formatDate(Date(data.start_date))}}
+					</template>
+				</Column>
+                <Column field="sanctioned_at" header="Fecha expiracion">
+					<template #body="{data}">
+						{{formatDate(Date(data.expiry_date))}}
+					</template>
+				</Column>
+                <Column field="sanction_expiration" header="Fecha retorno">
+					<template #body="{data}">
+						{{formatDate(Date(data.returned_at))}}
+					</template>
+				</Column>
+            </DataTable>
+
+			<h4>Sanciones</h4>
+			<DataTable :value="selected_borrower?.Borrower_Sanction" responsiveLayout="scroll" class="p-datatable-sm mb-3" v-if="selected_borrower?.Borrower_Sanction.length">
+                <Column field="reason" header="Razon"></Column>
+                <Column field="sanctioned_at" header="Fecha Sancion">
+					<template #body="{data}">
+						{{formatDate(Date(data.sanctioned_at))}}
+					</template>
+				</Column>
+                <Column field="sanction_expiration" header="Expiracion Sancion">
+					<template #body="{data}">
+						{{formatDate(Date(data.sanction_expiration))}}
+					</template>
+				</Column>
+            </DataTable>
+			
+			<template #footer>
+				<Button label="Ok" icon="pi pi-times" @click="$store.state.borrowerDetailsModalStatus = false" class="p-button-text"/>
+			</template>
+		</Dialog>
 	</div>
 </template>
 
@@ -85,6 +138,7 @@ export default {
             customers: null,
             selectedCustomers: null,
 			apiService: null,
+			selected_borrower: null,
             filters: {
                 'global': {value: null, matchMode: FilterMatchMode.CONTAINS},
                 'name': {operator: FilterOperator.AND, constraints: [{value: null, matchMode: FilterMatchMode.STARTS_WITH}]},
@@ -128,7 +182,7 @@ export default {
     },
     methods: {
         formatDate(value) {
-            return value.toLocaleDateString('en-US', {
+            return new Date(value).toLocaleDateString('en-US', {
                 day: '2-digit',
                 month: '2-digit',
                 year: 'numeric',
@@ -148,6 +202,20 @@ export default {
 		exportCSV() {
             this.$refs.dt.exportCSV();
         },
+
+		async showDetails(data) {
+			const response = await this.apiService.getWithToken('borrower/' + data + '?withBorrows=true&withSanction=true')
+
+			this.selected_borrower = response
+			console.log(this.selected_borrower);
+
+			this.$store.commit('changeBorrowerDetailsModalStatus', true)
+		},
+
+		downloadPDF(id){
+			let routeData = this.$router.resolve({name: 'admin.pdf', params: {id: id}});
+			window.open(routeData.href, '_blank');
+		}
     }
 }
 </script>

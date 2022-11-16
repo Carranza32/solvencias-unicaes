@@ -75,37 +75,35 @@
                 <InputText id="email" v-model.trim="user.email" required="true" autofocus :class="{'p-invalid': submitted && !user.email}" />
                 <small class="p-error" v-if="submitted && !user.email">Name is required.</small>
             </div>
-            <div class="field">
-				<label for="inventoryStatus" class="mb-3">Estados del usuario</label>
-				<Dropdown id="inventoryStatus" v-model="product.inventoryStatus" :options="statuses" optionLabel="label" placeholder="Selecciona un usuario">
-					<template #value="slotProps">
-						<div v-if="slotProps.value && slotProps.value.value">
-							<span :class="'product-badge status-' +slotProps.value.value">{{slotProps.value.label}}</span>
-						</div>
-						<div v-else-if="slotProps.value && !slotProps.value.value">
-							<span :class="'product-badge status-' +slotProps.value.toLowerCase()">{{slotProps.value}}</span>
-						</div>
-						<span v-else>
-							{{slotProps.placeholder}}
-						</span>
-					</template>
-				</Dropdown>
-			</div>
+            <div class="field" v-if="user.id">
+                <label for="password">password</label>
+                <Password id="password" v-model.trim="user.password" required="true" autofocus :class="{'p-invalid': submitted && !user.password}" />
+                <small class="p-error" v-if="submitted && !user.password">Password is required.</small>
+            </div>
 
             <div class="field">
                 <label class="mb-3">Rol</label>
                 <div class="formgrid grid">
                     <div class="field-radiobutton col-6">
-                        <RadioButton id="category1" name="category" value="Accessories" v-model="product.category" />
-                        <label for="category1">Super admin</label>
+                        <Checkbox id="rol1" name="roles" value="ROLE_UNICAES_ADMINISTRATOR" v-model="user.roles" />
+                        <label for="rol1">Administrador</label>
                     </div>
                     <div class="field-radiobutton col-6">
-                        <RadioButton id="category2" name="category" value="Clothing" v-model="product.category" />
-                        <label for="category2">Administrador</label>
+                        <Checkbox id="rol2" name="roles" value="ROLE_UNICAES_MODERATOR" v-model="user.roles" />
+                        <label for="rol2">Moderador</label>
+                    </div>
+                </div>
+            </div>
+            <div class="field">
+                <label class="mb-3">regions</label>
+                <div class="formgrid grid">
+                    <div class="field-radiobutton col-6">
+                        <Checkbox id="region1" name="category" value="REGION_UNICAES_SANTA_ANA" v-model="user.regions" />
+                        <label for="region1">SANTA_ANA</label>
                     </div>
                     <div class="field-radiobutton col-6">
-                        <RadioButton id="category3" name="category" value="Electronics" v-model="product.category" />
-                        <label for="category3">Reporteria</label>
+                        <Checkbox id="region2" name="category" value="REGION_UNICAES_ILOBASCO" v-model="user.regions" />
+                        <label for="region2">ILOBASCO</label>
                     </div>
                 </div>
             </div>
@@ -195,26 +193,37 @@ export default {
             this.productDialog = false;
             this.submitted = false;
         },
-        saveProduct() {
+        async saveProduct() {
             this.submitted = true;
+			console.log(this.user);
 
-			if (this.product.name.trim()) {
-                if (this.product.id) {
-                    this.product.inventoryStatus = this.product.inventoryStatus.value ? this.product.inventoryStatus.value: this.product.inventoryStatus;
-                    this.products[this.findIndexById(this.product.id)] = this.product;
-                    this.$toast.add({severity:'success', summary: 'Successful', detail: 'Product Updated', life: 3000});
+			if (this.user?.first_name.trim()) {
+                if (this.user.id != null) {
                 }
                 else {
-                    this.product.id = this.createId();
-                    this.product.code = this.createId();
-                    this.product.image = 'product-placeholder.svg';
-                    this.product.inventoryStatus = this.product.inventoryStatus ? this.product.inventoryStatus.value : 'INSTOCK';
-                    this.products.push(this.product);
-                    this.$toast.add({severity:'success', summary: 'Successful', detail: 'Product Created', life: 3000});
+                    console.log(this.user);
+                    
+					try {
+						await this.ApiService.postWithToken('user', {
+							firstName: this.user.first_name,
+							lastName: this.user.last_name,
+							email: this.user.email,
+							roles: this.user.roles,
+							regions: this.user.regions,
+							password: this.user.password,
+						});
+
+						this.$toast.add({severity:'success', summary: 'Usuario creado', detail: 'Product Created', life: 3000});
+					} catch (error) {
+						this.$toast.add({severity:'error', summary: 'Error al crear el usuario', life: 3000});
+					}
                 }
 
                 this.productDialog = false;
                 this.product = {};
+                this.user = {};
+
+
             }
         },
         editProduct(product) {

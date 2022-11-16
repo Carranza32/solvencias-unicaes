@@ -61,16 +61,6 @@ export default {
 						pointHoverRadius: 12,
 						tension: 0.6
                     },
-                    {
-                        label: 'Entregadas',
-                        backgroundColor: 'rgba(59, 135, 247, 0.2)',
-                        data: [28, 48, 40, 19, 86, 27, 90],
-						cubicInterpolationMode: 'monotone',
-						borderColor: '#3b87f7',
-						pointRadius: 7,
-						pointHoverRadius: 12,
-						tension: 0.6
-                    }
                 ]
             },
 			basicOptions: {
@@ -121,7 +111,7 @@ export default {
                         }
                     }
                 }
-            }
+            },
 		}
 	},
 	ApiService: null,
@@ -130,7 +120,29 @@ export default {
 	},
 	async mounted() {
 		const response = await this.ApiService.getWithToken('user/me');
+		const statistics = await this.ApiService.getWithToken('statistics/solvencies');
+
 		this.$store.state.user = response;
+		this.$store.state.statistics = statistics;		
 	},
+	watch: {
+        '$store.state.statistics': function () {
+            if (this.$store.state.statistics != undefined) {
+                const labels = Object.keys(this.$store.state.statistics.total_per_month);
+				const solicitadas = Object.values(this.$store.state.statistics.total_per_month);
+
+				const total_solicitadas = this.$store.state.statistics.total_requested
+				const pendientes = this.$store.state.statistics.pending_to_delivery
+				const entregadas = this.$store.state.statistics.solvencies_delivered
+
+				this.basicData.labels = labels;
+				this.basicData.datasets[0].data = solicitadas;
+
+
+
+				this.chartData.datasets[0].data = [total_solicitadas, entregadas, pendientes];
+            }
+        },
+    },
 }
 </script>

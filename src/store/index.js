@@ -2,11 +2,16 @@ import { createStore } from 'vuex'
 
 export default createStore({
   state: {
-    user: {}
+    user: {},
+    statistics: {},
+    borrowerDetailsModalStatus: false,
   },
   getters: {
   },
   mutations: {
+    changeBorrowerDetailsModalStatus(state, visible) {
+        state.borrowerDetailsModalStatus = visible
+    },
   },
   actions: {
   },

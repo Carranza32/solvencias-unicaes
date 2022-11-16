@@ -6,6 +6,7 @@ import AdminRegister from '../views/admin/auth/Register.vue'
 import AdminSolvencias from '../views/admin/Solvencias.vue'
 import AdminUsers from '../views/admin/Users.vue'
 import AdminProfile from '../views/admin/Profile.vue'
+import AdminPdf from '../views/admin/Pdf.vue'
 
 const routes = [
     {
@@ -37,6 +38,12 @@ const routes = [
         path: '/admin/profile',
         name: 'admin.profile',
         component: AdminProfile
+    },
+    {
+        path: '/admin/solvencia/pdf/:id',
+        name: 'admin.pdf',
+        component: AdminPdf,
+        props: true,
     },
 ]
 
